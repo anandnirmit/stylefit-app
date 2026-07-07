@@ -93,11 +93,33 @@ fun StyleFitApp() {
         }
     }
 
-    fun launchCamera(target: Int) {
+    fun actuallyLaunchCamera(target: Int) {
         val uri = createImageCaptureUri(context)
         pendingCameraUri = uri
         pendingCameraTarget = target
         cameraLauncher.launch(uri)
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            actuallyLaunchCamera(pendingCameraTarget)
+        } else {
+            Toast.makeText(context, "Camera permission is needed to take a photo", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun launchCamera(target: Int) {
+        pendingCameraTarget = target
+        val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+            context, android.Manifest.permission.CAMERA
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (hasPermission) {
+            actuallyLaunchCamera(target)
+        } else {
+            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+        }
     }
 
     if (showSettings) {
